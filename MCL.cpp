@@ -226,7 +226,10 @@ int main()
 {
     // Instantiate a robot object from the Robot class
     Robot myrobot;
-
+	
+	//Forward Noise=5.0, Turn Noise=0.1,Sense Noise=5.0
+    myrobot.set_noise(5.0, 0.1, 5.0);
+	
     // Set robot new position to x=30.0, y=50.0 and orientation=PI/2
     myrobot.set(30.0,50.0,M_PI/2.0);
 
