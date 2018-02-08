@@ -1,11 +1,12 @@
-//#include "src/matplotlibcpp.h"//Graph Library
+//Compile with: g++ solution.cpp -o app -std=c++11 -I/usr/include/python2.7 -lpython2.7
+#include "src/matplotlibcpp.h" //Graph Library
 #include <iostream>
 #include <string>
 #include <math.h>
 #include <stdexcept> // throw errors
 #include <random> //C++ 11 Random Numbers
 
-//namespace plt = matplotlibcpp;
+namespace plt = matplotlibcpp;
 using namespace std;
 
 // Landmarks
@@ -189,11 +190,11 @@ double max(double arr[], int n)
     }
     return max;
 }
-/*
+
 void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
 {
-	//Draw the robot, landmarks, particles and resampled particles on a graph
-	
+    //Draw the robot, landmarks, particles and resampled particles on a graph
+
     //Graph Format
     plt::title("MCL, step " + to_string(step));
     plt::xlim(0, 100);
@@ -213,15 +214,15 @@ void visualization(int n, Robot robot, int step, Robot p[], Robot pr[])
     for (int i = 0; i < sizeof(landmarks) / sizeof(landmarks[0]); i++) {
         plt::plot({ landmarks[i][0] }, { landmarks[i][1] }, "ro");
     }
-    
+
     //Draw robot position in blue
     plt::plot({ robot.x }, { robot.y }, "bo");
 
-	//Save the image and close the plot
+    //Save the image and close the plot
     plt::save("./Images/Step" + to_string(step) + ".png");
     plt::clf();
 }
-*/
+
 int main()
 {
     //Practice Interfacing with Robot Class
@@ -246,25 +247,55 @@ int main()
     myrobot = Robot();
     double* z;
 
-    //Move the robot and sense the environment afterwards
-    myrobot = myrobot.move(0.1, 5.0);
-    z = myrobot.sense();
+    //Iterating 50 times over the set of particles
+    int steps = 50;
+    for (int t = 0; t < steps; t++) {
 
-    // Simulate a robot motion for each of these particles
-    Robot p2[n];
-    for (int i = 0; i < n; i++) {
-        p2[i] = p[i].move(0.1, 5.0);
-        p[i] = p2[i];
-    }
-	
-	//Generate particle weights depending on robot's measurement
-    //Print particle weights, each on a single line
-    double w[n];
-    for (int i = 0; i < n; i++) {
-        w[i] = p[i].measurement_prob(z);
-        cout << w[i] << endl;
-    }
-	
-	
+        //Move the robot and sense the environment afterwards
+        myrobot = myrobot.move(0.1, 5.0);
+        z = myrobot.sense();
+
+        // Simulate a robot motion for each of these particles
+        Robot p2[n];
+        for (int i = 0; i < n; i++) {
+            p2[i] = p[i].move(0.1, 5.0);
+            p[i] = p2[i];
+        }
+
+        //Generate particle weights depending on robot's measurement
+        double w[n];
+        for (int i = 0; i < n; i++) {
+            w[i] = p[i].measurement_prob(z);
+            //cout << w[i] << endl;
+        }
+
+        //Resample the particles with a sample probability proportional to the importance weight
+        Robot p3[n];
+        int index = gen_real_random() * n;
+        //cout << index << endl;
+        double beta = 0.0;
+        double mw = max(w, n);
+        //cout << mw;
+        for (int i = 0; i < n; i++) {
+            beta += gen_real_random() * 2.0 * mw;
+            while (beta > w[index]) {
+                beta -= w[index];
+                index = mod((index + 1), n);
+            }
+            p3[i] = p[index];
+            p[i] = p3[i];
+            //cout << p[i].show_pose() << endl;
+        }
+        
+        //Evaluate the Error
+        cout << "Step = " << t << ", Evaluation = " << evaluation(myrobot, p, n) << endl;
+        
+        //####   DON'T MODIFY ANYTHING ABOVE HERE! ENTER CODE BELOW ####
+		
+        //Graph the position of the robot and the particles at each step
+        visualization(n, myrobot, t, p2, p3);
+
+    } //End of Steps loop
+    
     return 0;
 }
