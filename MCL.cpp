@@ -256,5 +256,15 @@ int main()
         p2[i] = p[i].move(0.1, 5.0);
         p[i] = p2[i];
     }
+	
+	//Generate particle weights depending on robot's measurement
+    //Print particle weights, each on a single line
+    double w[n];
+    for (int i = 0; i < n; i++) {
+        w[i] = p[i].measurement_prob(z);
+        cout << w[i] << endl;
+    }
+	
+	
     return 0;
 }
